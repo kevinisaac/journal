@@ -7,16 +7,16 @@ class User(db.Model):
     password = db.Column(db.String(60))
     posts = db.relationship('Post', backref = 'author', lazy = 'dynamic')
 
-    encrypted_key = db.Column(db.LargeBinary(32))
+    active = db.Column(db.Boolean, default=True)
+    authenticated = db.Column(db.Boolean, default=False)
     companion_key = db.Column(db.LargeBinary(32), default=generate_salt(32))
     user_key_salt = db.Column(db.LargeBinary(32), default=generate_salt(32))
-    authenticated = db.Column(db.Boolean, default=False)
 
     def is_authenticated(self):
         return self.authenticated
 
     def is_active(self):
-        return True
+        return self.active
 
     def is_anonymous(self):
         return False
