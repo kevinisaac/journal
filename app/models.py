@@ -4,7 +4,6 @@ from crypto import generate_salt, generate_key, AES_encrypt, AES_decrypt
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(16), index=True, unique=True)
-    email = db.Column(db.String(128), index=True, unique=True)
     password = db.Column(db.String(60))
     status = db.Column(db.Integer, default=0)
     posts = db.relationship('Post', backref = 'author', lazy = 'dynamic')
@@ -27,7 +26,7 @@ class User(db.Model):
         return unicode(self.id)
 
     def __repr__(self):
-        return '<User %r>' % (self.email)
+        return '<User %r>' % (self.username)
 
 class Post(db.Model):
     id = db.Column(db.Integer, primary_key=True)

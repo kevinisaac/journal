@@ -52,18 +52,14 @@ def index():
 def register():
     form = RegistrationForm()
     if form.validate_on_submit():
-        # Check if username and email are already registered
+        # Check if username is unique
         if User.query.filter_by(username=form.username.data).first():
-            flash('Username is taken')
-            return render_template("register.html", title = 'Sign In', form=form)
-        if User.query.filter_by(username=form.email.data).first():
-            flash('Email address is already registered')
+            flash('Username is already taken')
             return render_template("register.html", title = 'Sign In', form=form)
         
         # Create new user
         user = User(
             username=form.username.data,
-            email=form.email.data,
             password=bcrypt.generate_password_hash(form.password.data),
             companion_key=generate_salt(32),
             user_key_salt=generate_salt(32),
