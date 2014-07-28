@@ -11,8 +11,8 @@ class User(db.Model):
 
     active = db.Column(db.Boolean, default=True)
     authenticated = db.Column(db.Boolean, default=False)
-    companion_key = db.Column(db.String(32), default=generate_salt(32))
-    user_key_salt = db.Column(db.String(32), default=generate_salt(32))
+    companion_key = db.Column(db.Binary(32))
+    user_key_salt = db.Column(db.Binary(32))
 
     def is_authenticated(self):
         return self.authenticated
@@ -34,7 +34,7 @@ class Post(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
     meta = db.Column(db.Text)
-    body = db.Column(db.Text)
+    body = db.Column(db.LargeBinary)
     timestamp = db.Column(db.DateTime)
 
     def __repr__(self):

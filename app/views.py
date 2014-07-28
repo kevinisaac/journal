@@ -28,7 +28,7 @@ def logout_required(redirect_default):
         @wraps(f)
         def decorated_function(*args, **kwargs):
             if current_user.is_authenticated():
-                return get_redirect_target(redirect_default)
+                return redirect(get_redirect_target(redirect_default))
             else:
                 return f(*args, **kwargs)
         return decorated_function
@@ -39,6 +39,16 @@ def logout_required(redirect_default):
 @app.route('/index')
 def index():
     return "Hello, World!"
+
+@app.route('/test')
+@login_required
+def login_test():
+    user = current_user
+    print user
+    print type(user)
+    print current_user.get_id()
+    print user.active
+    return "passed"
 
 
 @lm.user_loader
@@ -66,23 +76,20 @@ def register():
             email=form.email.data,
             password=bcrypt.generate_password_hash(form.password.data),
             companion_key=generate_salt(32),
-            user_key_salt=generate_salt(32)
+            user_key_salt=generate_salt(32),
         )
-        
+
         user.authenticated = True
         db.session.add(user)
         db.session.commit()
 
-        return 'passed2!!'
         # Generate and store user's encryption key
         user_key = generate_key(form.password.data, user.user_key_salt, 32)
         master_key = str(
             bytearray(x ^ y for x, y in zip(bytearray(user_key), bytearray(user.companion_key)))
         )
-        return 'passed!!'
-        session[user.id] = master_key
+        session[str(user.id)] = master_key
 
-        return 'passed!!'
         login_user(user, remember=False)
         return redirect(url_for(".index"))
     
@@ -94,16 +101,20 @@ def register():
 def login():
    form = LoginForm()
    if form.validate_on_submit():
-        user = User.query.get(form.username.data)
+        user = User.query.filter_by(username=form.username.data).first()
+        print user
         if user and bcrypt.check_password_hash(user.password, form.password.data):
+            print 'PASSEDCHECK'
             user.authenticated = True
             db.session.add(user)
             db.session.commit()
 
             #Generate and store user's encryption key
             user_key = generate_key(form.password.data, user.user_key_salt, 32)
-            master_key = user_key ^ user.companion_key
-            session[user.id] = master_key
+            master_key = str(
+                bytearray(x ^ y for x, y in zip(bytearray(user_key), bytearray(user.companion_key)))
+            )
+            session[str(user.id)] = master_key
 
             login_user(user, remember=False)
             return redirect(url_for(".index"))
@@ -111,18 +122,18 @@ def login():
    return render_template("login.html", title = 'Sign In',form=form)
 
 
-@app.route("/logout", methods=["GET"])
+@app.route("/logout")
 @login_required
 def logout():
     user = current_user
+    
+    session[str(user.id)] = generate_salt(32)
+    session.clear()
+
     user.authenticated = False
     db.session.add(user)
     db.session.commit()
-
-    # Clear the session
-    session[user.id] = generate_salt(32)
-    session.clear()
-
+    
     logout_user()
-    return render_template("index.html")
+    return redirect(url_for(".index"))
 
