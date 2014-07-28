@@ -34,7 +34,8 @@ class Post(db.Model):
 
     meta = db.Column(db.Text)
     body = db.Column(db.LargeBinary)
-    timestamp = db.Column(db.DateTime)
+    created_timestamp = db.Column(db.DateTime)
+    modified_timestamp = db.Column(db.DateTime)
 
     def __repr__(self):
         return '<Post %r>' % (self.timestamp)

@@ -6,6 +6,7 @@ from flask.ext.login import LoginManager
 from flask.ext.bcrypt import Bcrypt
 from flask.ext.script import Manager
 from flask.ext.migrate import Migrate, MigrateCommand
+from flask_sslify import SSLify
 
 app = Flask(__name__)
 app.debug = True
@@ -28,5 +29,8 @@ bcrypt = Bcrypt(app)
 # Server-Side Sessions
 store = FilesystemStore('./tmp')
 KVSessionExtension(store, app)
+
+# SSL
+sslify = SSLify(app)
 
 from app import views, models
