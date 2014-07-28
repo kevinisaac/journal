@@ -1,7 +1,6 @@
-import redis
 from flask import Flask
 from flask_kvsession import KVSessionExtension
-from simplekv.memory.redisstore import RedisStore
+from simplekv.fs import FilesystemStore, WebFilesystemStore
 from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.login import LoginManager
 from flask.ext.bcrypt import Bcrypt
@@ -27,7 +26,7 @@ lm.init_app(app)
 bcrypt = Bcrypt(app)
 
 # Server-Side Sessions
-#store = RedisStore(redis.StrictRedis())
-#KVSessionExtension(store, app)
+store = FilesystemStore('./tmp')
+KVSessionExtension(store, app)
 
 from app import views, models

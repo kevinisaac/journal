@@ -35,38 +35,27 @@ def logout_required(redirect_default):
     return decorated_wrapper
 
 
+@lm.user_loader
+def load_user(id):
+    return User.query.get(int(id))
+
+
 @app.route('/')
 @app.route('/index')
 def index():
     return "Hello, World!"
-
-@app.route('/test')
-@login_required
-def login_test():
-    user = current_user
-    print user
-    print type(user)
-    print current_user.get_id()
-    print user.active
-    return "passed"
-
-
-@lm.user_loader
-def load_user(id):
-    return User.query.get(int(id))
 
 
 @app.route("/register", methods=["GET", "POST"])
 @logout_required('.index')
 def register():
     form = RegistrationForm()
-
     if form.validate_on_submit():
         # Check if username and email are already registered
-        if User.query.get(form.username.data):
+        if User.query.filter_by(username=form.username.data).first():
             flash('Username is taken')
             return render_template("register.html", title = 'Sign In', form=form)
-        if User.query.get(form.email.data):
+        if User.query.filter_by(username=form.email.data).first():
             flash('Email address is already registered')
             return render_template("register.html", title = 'Sign In', form=form)
         
@@ -102,9 +91,7 @@ def login():
    form = LoginForm()
    if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
-        print user
         if user and bcrypt.check_password_hash(user.password, form.password.data):
-            print 'PASSEDCHECK'
             user.authenticated = True
             db.session.add(user)
             db.session.commit()
