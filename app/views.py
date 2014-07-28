@@ -1,4 +1,5 @@
-from flask import render_template, flash, redirect, session, url_for, request, g
+from flask import (render_template, flash, redirect, session, url_for, request, g,
+    jsonify)
 from flask.ext.login import (login_user, logout_user, current_user, login_required,
     fresh_login_required)
 from app import app, db, lm, bcrypt
@@ -8,7 +9,6 @@ from crypto import (generate_salt, generate_key, generate_hash, AES_encrypt,
     AES_decrypt, xor_keys)
 from functools import wraps
 import snappy
-
 
 def is_safe_url(target):
     """Checks if url is safe."""
@@ -41,6 +41,19 @@ def logout_required(target):
     return decorated_wrapper
 
 
+def ajax_only(target):
+    """Redirects to target if request is not ajax."""
+    def decorated_wrapper(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            if request.is_xhr:
+                return f(*args, **kwargs)
+            else:
+                return redirect(url_for(target))
+        return decorated_function
+    return decorated_wrapper
+
+
 @lm.user_loader
 def load_user(id):
     """Loads user from id."""
@@ -56,30 +69,53 @@ def index():
         return "placeholder"
 
 
-@app.route('/_update_post')
+@app.route('/api/update_post')
+@ajax_only('.index')
 @fresh_login_required
-def _update_post():
+def api_update_post():
     user = current_user
     slug = request.args.get('slug', type=str)
     meta = request.args.get('meta', type=str)
     content = request.args.get('content', type=str)
 
-    if None not in (post_id, content):
+    if None not in (slug, content):
         post = user.posts.filter_by(slug=slug).first()
         if post:
-            half_key = session[generate_hash(user.user_key_salt)]
-            key = xor_keys(half_key, app.config['MASTER_KEY'])
-            content = snappy.compress(content)
-            content = AES_encrypt(key, content)
+            try:
+                half_key = session[generate_hash(user.user_key_salt)]
+                key = xor_keys(half_key, app.config['MASTER_KEY'])
+                content = snappy.compress(content)
+                content = AES_encrypt(key, content)
 
-            post.meta = meta
-            post.content = content
-            db.session.add(post)
-            db.session.commit()
+                post.meta = meta
+                post.content = content
+                db.session.add(post)
+                db.session.commit()
+                return jsonify(error=None)
+            except:
+                return jsonify(error="Update error")
+    return jsonify(error="Not found")
 
 
-    #eturn jsonify(result=a + b)
+@app.route('/api/fetch_post')
+@ajax_only('.index')
+@fresh_login_required
+def api_fetch_post():
+    user = current_user
+    slug = request.args.get('slug', type=str)
 
+    if slug:
+        post = user.posts.filter_by(slug=slug).first()
+        if post:
+            try:
+                half_key = session[generate_hash(user.user_key_salt)]
+                key = xor_keys(half_key, app.config['MASTER_KEY'])
+                content = AES_decrypt(key, post.content)
+                content = snappy.decompress(content)
+                return jsonify(slug=slug, meta=post.meta, content=content, error=None)
+            except:
+                return jsonify(error="Fetch error")
+    return jsonify(error="Not found")
 
 
 @app.route("/register", methods=['GET', 'POST'])
