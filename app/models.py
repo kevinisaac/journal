@@ -30,12 +30,13 @@ class User(db.Model):
 
 class Post(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    slug = db.Column(db.String(8))
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
     meta = db.Column(db.Text)
-    body = db.Column(db.LargeBinary)
+    content = db.Column(db.LargeBinary)
     created_timestamp = db.Column(db.DateTime)
     modified_timestamp = db.Column(db.DateTime)
 
     def __repr__(self):
-        return '<Post %r>' % (self.timestamp)
+        return '<Post %r>' % (self.id)

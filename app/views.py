@@ -7,6 +7,7 @@ from models import User, Post
 from crypto import (generate_salt, generate_key, generate_hash, AES_encrypt,
     AES_decrypt, xor_keys)
 from functools import wraps
+import snappy
 
 
 def is_safe_url(target):
@@ -55,7 +56,33 @@ def index():
         return "placeholder"
 
 
-@app.route("/register", methods=["GET", "POST"])
+@app.route('/_update_post')
+@fresh_login_required
+def _update_post():
+    user = current_user
+    slug = request.args.get('slug', type=str)
+    meta = request.args.get('meta', type=str)
+    content = request.args.get('content', type=str)
+
+    if None not in (post_id, content):
+        post = user.posts.filter_by(slug=slug).first()
+        if post:
+            half_key = session[generate_hash(user.user_key_salt)]
+            key = xor_keys(half_key, app.config['MASTER_KEY'])
+            content = snappy.compress(content)
+            content = AES_encrypt(key, content)
+
+            post.meta = meta
+            post.content = content
+            db.session.add(post)
+            db.session.commit()
+
+
+    #eturn jsonify(result=a + b)
+
+
+
+@app.route("/register", methods=['GET', 'POST'])
 @logout_required('.index')
 def register():
     form = RegistrationForm()
@@ -87,7 +114,7 @@ def register():
     return render_template("register.html", title = 'Sign In', form=form)
 
 
-@app.route("/login", methods=["GET", "POST"])
+@app.route("/login", methods=['GET', 'POST'])
 @logout_required('.index')
 def login():
    form = LoginForm()
