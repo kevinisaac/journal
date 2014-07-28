@@ -25,7 +25,29 @@ def login():
             user.authenticated = True
             db.session.add(user)
             db.session.commit()
-            login_user(user, remember=True)
+
+            # Generate and store user's encryption key
+            user_key = generate_key(form.password.data, user.user_key_salt, 32)
+            master_key = user_key ^ user.companion_key
+            session[user.id] = master_key
+
+            login_user(user, remember=False)
             return redirect(url_for("app.index"))
     return render_template("login.html", form=form)
+
+@app.route("/logout", methods=["GET"])
+@login_required
+def logout():
+    """Logout the current user."""
+    user = current_user
+    user.authenticated = False
+    db.session.add(user)
+    db.session.commit()
+
+    # Clear the session
+    session[user.id] = generate_salt(32)
+    session.clear()
+
+    logout_user()
+    return render_template("index.html")
 

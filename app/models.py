@@ -4,6 +4,7 @@ from crypto import generate_salt, generate_key, AES_encrypt, AES_decrypt
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(128), index=True, unique=True)
+    password = db.Column(db.String(60))
     posts = db.relationship('Post', backref = 'author', lazy = 'dynamic')
 
     encrypted_key = db.Column(db.LargeBinary(32))
