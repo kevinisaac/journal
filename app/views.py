@@ -3,8 +3,9 @@ from flask.ext.login import login_user, logout_user, current_user, login_require
 from app import app, db, lm, bcrypt
 from forms import LoginForm, RegistrationForm
 from models import User, Post
-from crypto import generate_salt, generate_key, AES_encrypt, AES_decrypt
+from crypto import generate_salt, generate_key, generate_hash, AES_encrypt, AES_decrypt
 from functools import wraps
+from Crypto.Hash import SHA512
 
 
 def is_safe_url(target):
@@ -74,10 +75,10 @@ def register():
 
         # Generate and store user's encryption key
         user_key = generate_key(form.password.data, user.user_key_salt, 32)
-        master_key = str(
+        half_key = str(
             bytearray(x ^ y for x, y in zip(bytearray(user_key), bytearray(user.companion_key)))
         )
-        session[str(user.id)] = master_key
+        session[generate_hash(user.user_key_salt)] = half_key
 
         login_user(user, remember=False)
         return redirect(url_for(".index"))
@@ -98,10 +99,10 @@ def login():
 
             #Generate and store user's encryption key
             user_key = generate_key(form.password.data, user.user_key_salt, 32)
-            master_key = str(
+            half_key = str(
                 bytearray(x ^ y for x, y in zip(bytearray(user_key), bytearray(user.companion_key)))
             )
-            session[str(user.id)] = master_key
+            session[generate_hash(user.user_key_salt)] = half_key
 
             login_user(user, remember=False)
             return redirect(url_for(".index"))
@@ -114,7 +115,7 @@ def login():
 def logout():
     user = current_user
     
-    session[str(user.id)] = generate_salt(32)
+    session[generate_hash(user.user_key_salt)] = generate_salt(32)
     session.clear()
 
     user.authenticated = False

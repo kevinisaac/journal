@@ -1,6 +1,10 @@
 import scrypt
 from Crypto import Random
 from Crypto.Cipher import AES
+from Crypto.Hash import SHA256
+
+def generate_hash(data, length=32):
+    return SHA256.new(data).digest()
 
 def generate_salt(length=32):
     return Random.get_random_bytes(length)
