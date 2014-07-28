@@ -6,4 +6,6 @@ SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'app.db')
 SQLALCHEMY_MIGRATE_REPO = os.path.join(basedir, 'db_repository')
 
 CSRF_ENABLED = True
-SECRET_KEY = 'you-will-never-guess'
+SECRET_KEY = 'YJF67CL5i+OetVdJBssi+nmbdcIoTn6Z79OoTCRElto='
+SESSION_PROTECTION = 'strong'
+
