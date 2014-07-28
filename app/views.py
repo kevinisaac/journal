@@ -1,8 +1,8 @@
 from flask import render_template, flash, redirect, session, url_for, request, g
 from flask.ext.login import login_user, logout_user, current_user, login_required
 from app import app, db, lm, bcrypt
-from forms import LoginForm
-from models import User
+from forms import LoginForm, RegistrationForm
+from models import User, Post
 from crypto import generate_salt, generate_key, AES_encrypt, AES_decrypt
 from functools import wraps
 
@@ -13,7 +13,8 @@ def is_safe_url(target):
     return test_url.scheme in ('http', 'https') and \
            ref_url.netloc == test_url.netloc
 
-def get_redirect_target(redirect_default='index'):
+
+def get_redirect_target(redirect_default):
     for target in request.args.get('next'), request.referrer:
         if not target:
             continue
@@ -21,7 +22,8 @@ def get_redirect_target(redirect_default='index'):
             return target
     return url_for(redirect_default)
 
-def logout_required(redirect_default='index'):
+
+def logout_required(redirect_default):
     def decorated_wrapper(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
@@ -45,45 +47,68 @@ def load_user(id):
 
 
 @app.route("/register", methods=["GET", "POST"])
-@logout_required('index')
+@logout_required('.index')
 def register():
-    form = LoginForm()
+    form = RegistrationForm()
+
     if form.validate_on_submit():
-        user = User.query.get(form.email.data)
-        if user and bcrypt.check_password_hash(user.password, form.password.data):
-            user.authenticated = True
-            db.session.add(user)
-            db.session.commit()
+        # Check if username and email are already registered
+        if User.query.get(form.username.data):
+            flash('Username is taken')
+            return render_template("register.html", title = 'Sign In', form=form)
+        if User.query.get(form.email.data):
+            flash('Email address is already registered')
+            return render_template("register.html", title = 'Sign In', form=form)
+        
+        # Create new user
+        user = User(
+            username=form.username.data,
+            email=form.email.data,
+            password=bcrypt.generate_password_hash(form.password.data),
+            companion_key=generate_salt(32),
+            user_key_salt=generate_salt(32)
+        )
+        
+        user.authenticated = True
+        db.session.add(user)
+        db.session.commit()
 
-            # Generate and store user's encryption key
-            user_key = generate_key(form.password.data, user.user_key_salt, 32)
-            master_key = user_key ^ user.companion_key
-            session[user.id] = master_key
+        return 'passed2!!'
+        # Generate and store user's encryption key
+        user_key = generate_key(form.password.data, user.user_key_salt, 32)
+        master_key = str(
+            bytearray(x ^ y for x, y in zip(bytearray(user_key), bytearray(user.companion_key)))
+        )
+        return 'passed!!'
+        session[user.id] = master_key
 
-            login_user(user, remember=False)
-            return redirect(url_for("app.index"))
-    return render_template("login.html", form=form)
+        return 'passed!!'
+        login_user(user, remember=False)
+        return redirect(url_for(".index"))
+    
+    return render_template("register.html", title = 'Sign In', form=form)
 
 
 @app.route("/login", methods=["GET", "POST"])
-@logout_required('index')
+@logout_required('.index')
 def login():
-    form = LoginForm()
-    if form.validate_on_submit():
-        user = User.query.get(form.email.data)
+   form = LoginForm()
+   if form.validate_on_submit():
+        user = User.query.get(form.username.data)
         if user and bcrypt.check_password_hash(user.password, form.password.data):
             user.authenticated = True
             db.session.add(user)
             db.session.commit()
 
-            # Generate and store user's encryption key
+            #Generate and store user's encryption key
             user_key = generate_key(form.password.data, user.user_key_salt, 32)
             master_key = user_key ^ user.companion_key
             session[user.id] = master_key
 
             login_user(user, remember=False)
-            return redirect(url_for("app.index"))
-    return render_template("login.html", form=form)
+            return redirect(url_for(".index"))
+
+   return render_template("login.html", title = 'Sign In',form=form)
 
 
 @app.route("/logout", methods=["GET"])

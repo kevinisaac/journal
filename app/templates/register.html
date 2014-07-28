@@ -2,8 +2,8 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1>Sign In</h1>
-<form action="" method="post" name="login">
+<h1>Register</h1>
+<form action="" method="post" name="register">
     {{form.hidden_tag()}}
     <p>
         Please enter your username:<br>
@@ -13,9 +13,23 @@
         {% endfor %}<br>
     </p>
     <p>
+        Please enter your email:<br>
+        {{form.email(size=128)}}<br>
+        {% for error in form.errors.email %}
+        <span style="color: red;">[{{error}}]</span>
+        {% endfor %}<br>
+    </p>
+    <p>
         Please enter your password:<br>
         {{form.password(size=128)}}<br>
         {% for error in form.errors.password %}
+        <span style="color: red;">[{{error}}]</span>
+        {% endfor %}<br>
+    </p>
+    <p>
+        Please confirm your password:<br>
+        {{form.confirm(size=128)}}<br>
+        {% for error in form.errors.confirm %}
         <span style="color: red;">[{{error}}]</span>
         {% endfor %}<br>
     </p>

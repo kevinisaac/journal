@@ -6,7 +6,7 @@ def generate_salt(length=32):
     return Random.get_random_bytes(length)
 
 def generate_key(password, salt, length=32):
-    return scrypt.hash(password, salt, 1 << 14, 8, 1, length)
+    return scrypt.hash(str(password), str(salt), 1 << 14, 8, 1, length)
 
 def AES_encrypt(key, data):
     iv = generate_salt(16)

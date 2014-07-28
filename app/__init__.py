@@ -25,7 +25,7 @@ lm.init_app(app)
 bcrypt = Bcrypt(app)
 
 # Server-Side Sessions
-store = RedisStore(redis.StrictRedis())
-KVSessionExtension(store, app)
+#store = RedisStore(redis.StrictRedis())
+#KVSessionExtension(store, app)
 
 from app import views, models
