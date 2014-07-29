@@ -41,7 +41,7 @@ def logout_required(target):
     return decorated_wrapper
 
 
-def ajax_only(target):
+def ajax_required(target):
     """Redirects to target if request is not ajax."""
     def decorated_wrapper(f):
         @wraps(f)
@@ -54,25 +54,37 @@ def ajax_only(target):
     return decorated_wrapper
 
 
+def same_user_required(f):
+    """Checks whether user is viewing /username, else 403"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'username' in kwargs:
+            if current_user and current_user.username = kwargs['username']:
+                return f(*args, **kwargs)
+            abort(403)
+        return f(*args, **kwargs)
+    return decorated_function
+
+
 @lm.user_loader
 def load_user(id):
-    """Loads user from id."""
+    """Helper function needed for flask-login."""
     return User.query.get(int(id))
 
 
 @app.route('/')
 @app.route('/index')
-def index():
+def view_index():
     if current_user.is_authenticated():
         return "placeholder"
     else:
         return "placeholder"
 
 
-@app.route('/api/update_post')
-@ajax_only('.index')
+@app.route('/api/post/update_post')
+@ajax_required('.index')
 @fresh_login_required
-def api_update_post():
+def api_post_update_post():
     user = current_user
     slug = request.args.get('slug', type=str)
     meta = request.args.get('meta', type=str)
@@ -97,10 +109,10 @@ def api_update_post():
     return jsonify(error="Not found")
 
 
-@app.route('/api/fetch_post')
-@ajax_only('.index')
+@app.route('/api/post/fetch_post')
+@ajax_required('.index')
 @fresh_login_required
-def api_fetch_post():
+def api_post_fetch_post():
     user = current_user
     slug = request.args.get('slug', type=str)
 
@@ -118,9 +130,50 @@ def api_fetch_post():
     return jsonify(error="Not found")
 
 
+@app.route('/<username>/posts/<slug>')
+@same_user_required
+@fresh_login_required
+def view_post(username, slug):
+    user = current_user
+    post = user.posts.filter_by(slug=slug).first()
+    if post:
+        try:
+            half_key = session[generate_hash(user.user_key_salt)]
+            key = xor_keys(half_key, app.config['MASTER_KEY'])
+            content = AES_decrypt(key, post.content)
+            content = snappy.decompress(content)
+            return content
+            #return render_template("post.html")
+        except:
+            abort(500)
+    abort(404)
+
+
+@app.route('/<username>/posts/create')
+@same_user_required
+@fresh_login_required
+def view_post_create(username):
+    user = current_user
+
+    
+    post = user.posts.filter_by(slug=slug).first()
+    if post:
+        try:
+            half_key = session[generate_hash(user.user_key_salt)]
+            key = xor_keys(half_key, app.config['MASTER_KEY'])
+            content = AES_decrypt(key, post.content)
+            content = snappy.decompress(content)
+            return content
+            #return render_template("post.html")
+        except:
+            abort(500)
+    abort(404)
+
+
+
 @app.route("/register", methods=['GET', 'POST'])
 @logout_required('.index')
-def register():
+def view_register():
     form = RegistrationForm()
     if form.validate_on_submit():
         # Check if username is already taken
@@ -152,7 +205,7 @@ def register():
 
 @app.route("/login", methods=['GET', 'POST'])
 @logout_required('.index')
-def login():
+def view_login():
    form = LoginForm()
    if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
@@ -174,7 +227,7 @@ def login():
 
 @app.route("/logout")
 @fresh_login_required
-def logout():
+def view_logout():
     user = current_user
     
     # Overwrite half_key
