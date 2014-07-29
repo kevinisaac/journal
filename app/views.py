@@ -1,5 +1,5 @@
 from flask import (render_template, flash, redirect, session, url_for, request, g,
-    jsonify)
+    jsonify, abort)
 from flask.ext.login import (login_user, logout_user, current_user, login_required,
     fresh_login_required)
 from app import app, db, lm, bcrypt
@@ -8,7 +8,10 @@ from models import User, Post
 from crypto import (generate_salt, generate_key, generate_hash, AES_encrypt,
     AES_decrypt, xor_keys)
 from functools import wraps
+from datetime import datetime
+from urlparse import urlparse, urljoin
 import snappy
+import binascii
 
 def is_safe_url(target):
     """Checks if url is safe."""
@@ -18,14 +21,14 @@ def is_safe_url(target):
            ref_url.netloc == test_url.netloc
 
 
-def get_referrer(target):
+def get_referrer(target, *args, **kwargs):
     """Finds referrer, else target."""
-    for target in request.args.get('next'), request.referrer:
-        if not target:
+    for t in request.args.get('next'), request.referrer:
+        if not t:
             continue
-        if is_safe_url(target):
-            return target
-    return url_for(default)
+        if is_safe_url(t) and t != url_for('.logout'):
+            return t
+    return url_for(default, *args, **kwargs)
 
 
 def logout_required(target):
@@ -59,10 +62,10 @@ def same_user_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'username' in kwargs:
-            if current_user and current_user.username = kwargs['username']:
-                return f(*args, **kwargs)
-            abort(403)
-        return f(*args, **kwargs)
+            if current_user and current_user.is_authenticated():
+                if current_user.username == kwargs['username']:
+                    return f(*args, **kwargs)
+        abort(403)
     return decorated_function
 
 
@@ -73,18 +76,25 @@ def load_user(id):
 
 
 @app.route('/')
-@app.route('/index')
-def view_index():
-    if current_user.is_authenticated():
-        return "placeholder"
+def index():
+    if current_user and current_user.is_authenticated():
+        return redirect(url_for('.u', username=current_user.username))
     else:
         return "placeholder"
 
 
-@app.route('/api/post/update_post')
-@ajax_required('.index')
+@app.route('/u/<username>')
 @fresh_login_required
-def api_post_update_post():
+@same_user_required
+def u(username):
+    print username
+    return username
+
+
+@app.route('/api/posts/update_post')
+@fresh_login_required
+@ajax_required('.index')
+def api_posts_update_post():
     user = current_user
     slug = request.args.get('slug', type=str)
     meta = request.args.get('meta', type=str)
@@ -109,71 +119,67 @@ def api_post_update_post():
     return jsonify(error="Not found")
 
 
-@app.route('/api/post/fetch_post')
-@ajax_required('.index')
+@app.route('/u/<username>/posts/<slug>')
 @fresh_login_required
-def api_post_fetch_post():
-    user = current_user
-    slug = request.args.get('slug', type=str)
-
-    if slug:
-        post = user.posts.filter_by(slug=slug).first()
-        if post:
-            try:
-                half_key = session[generate_hash(user.user_key_salt)]
-                key = xor_keys(half_key, app.config['MASTER_KEY'])
-                content = AES_decrypt(key, post.content)
-                content = snappy.decompress(content)
-                return jsonify(slug=slug, meta=post.meta, content=content, error=None)
-            except:
-                return jsonify(error="Fetch error")
-    return jsonify(error="Not found")
-
-
-@app.route('/<username>/posts/<slug>')
 @same_user_required
-@fresh_login_required
-def view_post(username, slug):
+def u_posts_slug(username, slug):
     user = current_user
     post = user.posts.filter_by(slug=slug).first()
     if post:
-        try:
+        if post.content:
             half_key = session[generate_hash(user.user_key_salt)]
             key = xor_keys(half_key, app.config['MASTER_KEY'])
             content = AES_decrypt(key, post.content)
             content = snappy.decompress(content)
             return content
-            #return render_template("post.html")
-        except:
-            abort(500)
+        return "Empty"
+        #return render_template("post.html")
     abort(404)
 
 
-@app.route('/<username>/posts/create')
-@same_user_required
+@app.route('/u/<username>/posts/<slug>/delete')
 @fresh_login_required
-def view_post_create(username):
+@same_user_required
+def u_posts_slug_delete(username, slug):
     user = current_user
-
-    
     post = user.posts.filter_by(slug=slug).first()
     if post:
-        try:
-            half_key = session[generate_hash(user.user_key_salt)]
-            key = xor_keys(half_key, app.config['MASTER_KEY'])
-            content = AES_decrypt(key, post.content)
-            content = snappy.decompress(content)
-            return content
-            #return render_template("post.html")
-        except:
-            abort(500)
+        if post.content:
+            # Overwrite data
+            post.content = generate_salt(len(post.content))
+            db.session.add(post)
+            db.session.commit()
+        db.session.delete(post)
+        db.session.commit()
+        return redirect(url_for('.index'))
     abort(404)
 
+
+@app.route('/u/<username>/posts/create')
+@fresh_login_required
+@same_user_required
+def u_posts_create(username):
+    user = current_user
+    post = Post(created_timestamp=datetime.utcnow(), author=user)
+    db.session.add(post)
+    db.session.commit()
+
+    byte = generate_hash(str(datetime.utcnow()) + str(post.id))
+    slug = binascii.hexlify(byte)[:8]
+    while user.posts.filter_by(slug=slug).first():
+        byte = generate_hash(str(datetime.utcnow()) + str(post.id))
+        slug = binascii.hexlify(byte)[:8]
+
+    post.slug = slug
+    db.session.add(post)
+    db.session.commit()
+
+    return redirect(url_for('.u_posts_slug', username=username, slug=slug))
 
 
 @app.route("/register", methods=['GET', 'POST'])
 @logout_required('.index')
-def view_register():
+def register():
     form = RegistrationForm()
     if form.validate_on_submit():
         # Check if username is already taken
@@ -188,6 +194,7 @@ def view_register():
             companion_key=generate_salt(32),
             user_key_salt=generate_salt(32)
         )
+
         user.authenticated = True
         db.session.add(user)
         db.session.commit()
@@ -205,7 +212,7 @@ def view_register():
 
 @app.route("/login", methods=['GET', 'POST'])
 @logout_required('.index')
-def view_login():
+def login():
    form = LoginForm()
    if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
@@ -220,16 +227,17 @@ def view_login():
             session[generate_hash(user.user_key_salt)] = half_key
 
             login_user(user, remember=False)
-            return redirect(url_for(".index"))
+
+            return redirect(get_referrer('.u', username=user.username))
 
    return render_template("login.html", title = 'Sign In',form=form)
 
 
 @app.route("/logout")
 @fresh_login_required
-def view_logout():
+def logout():
     user = current_user
-    
+
     # Overwrite half_key
     session[generate_hash(user.user_key_salt)] = generate_salt(32)
     session.clear()

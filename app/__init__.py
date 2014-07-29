@@ -22,6 +22,8 @@ manager.add_command('db', MigrateCommand)
 # Login Manager
 lm = LoginManager()
 lm.init_app(app)
+lm.refresh_view = ".login"
+lm.login_view = ".login"
 
 # Bcrypt
 bcrypt = Bcrypt(app)

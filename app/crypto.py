@@ -21,7 +21,7 @@ def generate_hash(data, length=32):
 
 def generate_salt(length=32):
     """Generates random salt."""
-    assert length and length > 0
+    assert length and length >= 0
     return Random.get_random_bytes(length)
 
 
