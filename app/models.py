@@ -30,7 +30,7 @@ class User(db.Model):
 
 class Post(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    slug = db.Column(db.String(8))
+    slug = db.Column(db.String(128))
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
     meta = db.Column(db.Text)

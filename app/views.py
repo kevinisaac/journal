@@ -12,6 +12,9 @@ from datetime import datetime
 from urlparse import urlparse, urljoin
 import snappy
 import binascii
+import random
+import itertools
+
 
 def is_safe_url(target):
     """Checks if url is safe."""
@@ -91,10 +94,10 @@ def u(username):
     return username
 
 
-@app.route('/api/posts/update_post')
+@app.route('/api/update_post')
 @fresh_login_required
 @ajax_required('.index')
-def api_posts_update_post():
+def api_update_post():
     user = current_user
     slug = request.args.get('slug', type=str)
     meta = request.args.get('meta', type=str)
@@ -119,10 +122,10 @@ def api_posts_update_post():
     return jsonify(error="Not found")
 
 
-@app.route('/u/<username>/posts/<slug>')
+@app.route('/u/<username>/<slug>')
 @fresh_login_required
 @same_user_required
-def u_posts_slug(username, slug):
+def u_slug(username, slug):
     user = current_user
     post = user.posts.filter_by(slug=slug).first()
     if post:
@@ -137,10 +140,10 @@ def u_posts_slug(username, slug):
     abort(404)
 
 
-@app.route('/u/<username>/posts/<slug>/delete')
+@app.route('/u/<username>/<slug>/delete')
 @fresh_login_required
 @same_user_required
-def u_posts_slug_delete(username, slug):
+def u_slug_delete(username, slug):
     user = current_user
     post = user.posts.filter_by(slug=slug).first()
     if post:
@@ -155,38 +158,41 @@ def u_posts_slug_delete(username, slug):
     abort(404)
 
 
-@app.route('/u/<username>/posts/create')
+@app.route('/u/<username>/create')
 @fresh_login_required
 @same_user_required
-def u_posts_create(username):
+def u_create(username):
     user = current_user
     post = Post(created_timestamp=datetime.utcnow(), author=user)
     db.session.add(post)
     db.session.commit()
 
-    byte = generate_hash(str(datetime.utcnow()) + str(post.id))
-    slug = binascii.hexlify(byte)[:8]
-    while user.posts.filter_by(slug=slug).first():
-        byte = generate_hash(str(datetime.utcnow()) + str(post.id))
-        slug = binascii.hexlify(byte)[:8]
-
+    # Concats random integers together (starting from 6 of them)
+    # till we find a valid slug
+    length = 6
+    gen = lambda: (yield str(int(random.SystemRandom(1).random()*10)))
+    slug = ''.join(gen().next() for _ in range(length))
+    
+    while length <= 128: # Slug has a max length of 128
+        if not user.posts.filter_by(slug=slug).first():
+            break
+        slug = slug + gen().next()
+        length = length + 1
+    else:
+        abort(500) # Probability ~0
+        
     post.slug = slug
     db.session.add(post)
     db.session.commit()
 
-    return redirect(url_for('.u_posts_slug', username=username, slug=slug))
+    return redirect(url_for('.u_slug', username=username, slug=slug))
 
 
 @app.route("/register", methods=['GET', 'POST'])
 @logout_required('.index')
 def register():
     form = RegistrationForm()
-    if form.validate_on_submit():
-        # Check if username is already taken
-        if User.query.filter_by(username=form.username.data).first():
-            flash('Username is already taken')
-            return render_template("register.html", title = 'Sign In', form=form)
-        
+    if form.validate_on_submit():        
         # Create new user
         user = User(
             username=form.username.data,
@@ -215,20 +221,20 @@ def register():
 def login():
    form = LoginForm()
    if form.validate_on_submit():
-        user = User.query.filter_by(username=form.username.data).first()
-        if user and bcrypt.check_password_hash(user.password, form.password.data):
-            user.authenticated = True
-            db.session.add(user)
-            db.session.commit()
+        user = form.user
+        
+        user.authenticated = True
+        db.session.add(user)
+        db.session.commit()
 
-            # Generate and store user's half_key
-            user_key = generate_key(form.password.data, user.user_key_salt, 32)
-            half_key = xor_keys(user_key, user.companion_key)
-            session[generate_hash(user.user_key_salt)] = half_key
+        # Generate and store user's half_key
+        user_key = generate_key(form.password.data, user.user_key_salt, 32)
+        half_key = xor_keys(user_key, user.companion_key)
+        session[generate_hash(user.user_key_salt)] = half_key
 
-            login_user(user, remember=False)
+        login_user(user, remember=False)
 
-            return redirect(get_referrer('.u', username=user.username))
+        return redirect(get_referrer('.u', username=user.username))
 
    return render_template("login.html", title = 'Sign In',form=form)
 

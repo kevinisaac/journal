@@ -22,8 +22,10 @@ manager.add_command('db', MigrateCommand)
 # Login Manager
 lm = LoginManager()
 lm.init_app(app)
-lm.refresh_view = ".login"
-lm.login_view = ".login"
+lm.refresh_view = '.login'
+lm.refresh_message = 'Please reauthenticate.'
+lm.login_view = '.login'
+lm.login_message = 'Please log in to access this page.'
 
 # Bcrypt
 bcrypt = Bcrypt(app)
