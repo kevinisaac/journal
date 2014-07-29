@@ -83,7 +83,7 @@ def index():
     if current_user and current_user.is_authenticated():
         return redirect(url_for('.u', username=current_user.username))
     else:
-        return "placeholder"
+        return "hi"
 
 
 @app.route('/u/<username>')
@@ -132,6 +132,7 @@ def u_slug(username, slug):
             content = AES_decrypt(key, post.content)
             content = snappy.decompress(content)
             return content
+        
         return "Empty"
         #return render_template("post.html")
     abort(404)
