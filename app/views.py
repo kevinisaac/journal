@@ -94,32 +94,29 @@ def u(username):
     return username
 
 
-@app.route('/api/update_post')
+@app.route('/u/<username>/<slug>/update')
 @fresh_login_required
-@ajax_required('.index')
-def api_update_post():
+@same_user_required
+def api_update_post(username, slug):
     user = current_user
-    slug = request.args.get('slug', type=str)
     meta = request.args.get('meta', type=str)
     content = request.args.get('content', type=str)
 
-    if None not in (slug, content):
+    if None not in (meta, content):
         post = user.posts.filter_by(slug=slug).first()
         if post:
-            try:
-                half_key = session[generate_hash(user.user_key_salt)]
-                key = xor_keys(half_key, app.config['MASTER_KEY'])
-                content = snappy.compress(content)
-                content = AES_encrypt(key, content)
+            half_key = session[generate_hash(user.user_key_salt)]
+            key = xor_keys(half_key, app.config['MASTER_KEY'])
+            content = snappy.compress(content)
+            content = AES_encrypt(key, content)
 
-                post.meta = meta
-                post.content = content
-                db.session.add(post)
-                db.session.commit()
-                return jsonify(error=None)
-            except:
-                return jsonify(error="Update error")
-    return jsonify(error="Not found")
+            post.meta = meta
+            post.content = content
+            db.session.add(post)
+            db.session.commit()
+            return jsonify(error=None)
+        return jsonify(error="Not found")
+    return jsonify(error="Invalid parameters")
 
 
 @app.route('/u/<username>/<slug>')
