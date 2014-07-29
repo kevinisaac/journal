@@ -179,6 +179,8 @@ def u_create(username):
         slug = slug + gen().next()
         length = length + 1
     else:
+        db.session.delete(post)
+        db.session.commit()
         abort(500) # Probability ~0
         
     post.slug = slug
