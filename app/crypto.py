@@ -32,7 +32,7 @@ def generate_key(password, salt, length=32):
 
 
 def AES_encrypt(key, data):
-    """Encrypts data with key and random IV using AES."""
+    """Encrypts + signs data with key and random nonce using AES."""
     assert None not in (key, data), 'parameters can not be None'
     assert len(key) in AES.key_size, 'key size must be 16, 24, or 32 bytes'
     nonce = generate_salt(16)
@@ -44,7 +44,7 @@ def AES_encrypt(key, data):
 
 
 def AES_decrypt(key, data):
-    """Decrypts iv + data with key using AES."""
+    """Decrypts and verifies none + tag + data with key using AES."""
     assert None not in (key, data), 'parameters can not be None'
     assert len(key) in AES.key_size, 'key size must be 16, 24, or 32 bytes'
     nonce, tag, ciphertext = data[:16], data[16:32], data[32:]
