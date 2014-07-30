@@ -21,6 +21,7 @@ class LoginForm(Form):
         if not Form.validate(self):
             return False
         
+        self.username.data = self.username.data.lower()
         user = User.query.filter_by(username=self.username.data).first()
         if not user:
             self.username.errors.append('Username does not exist')
@@ -57,6 +58,7 @@ class RegistrationForm(Form):
         if not Form.validate(self):
             return False
         
+        self.username.data = self.username.data.lower()
         if User.query.filter_by(username=self.username.data).first():
             self.username.errors.append('Username is already taken')
             return False
