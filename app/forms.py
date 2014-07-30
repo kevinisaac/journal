@@ -4,6 +4,7 @@ from wtforms.validators import Required, Email, Length, EqualTo, Regexp
 from models import User
 from app import bcrypt
 
+
 class LoginForm(Form):
     """Form class for user login."""
     username = TextField('username', [
@@ -33,6 +34,7 @@ class LoginForm(Form):
 
         self.user = user
         return True
+
 
 class RegistrationForm(Form):
     username = TextField('username', [

@@ -60,6 +60,19 @@ def ajax_required(target):
     return decorated_wrapper
 
 
+def to_lower(*o_args):
+    """Uncapitalizes specified arguments if they exist"""
+    def decorated_wrapper(f):
+        @wraps(f)
+        def decorated_function(*f_args, **f_kwargs):
+            for o_arg in o_args:
+                if o_arg in f_kwargs:
+                    f_kwargs[o_arg] = f_kwargs[o_arg].lower()
+            return f(*f_args, **f_kwargs)
+        return decorated_function
+    return decorated_wrapper
+
+
 def same_user_required(f):
     """Checks whether user is viewing /username, else 403"""
     @wraps(f)
@@ -89,6 +102,7 @@ def index():
 @app.route('/u/<username>')
 @fresh_login_required
 @same_user_required
+@to_lower('username')
 def u(username):
     print username
     return username
@@ -97,6 +111,7 @@ def u(username):
 @app.route('/u/<username>/<slug>/update')
 @fresh_login_required
 @same_user_required
+@to_lower('username')
 def api_update_post(username, slug):
     user = current_user
     meta = request.args.get('meta', type=str)
@@ -122,6 +137,7 @@ def api_update_post(username, slug):
 @app.route('/u/<username>/<slug>')
 @fresh_login_required
 @same_user_required
+@to_lower('username')
 def u_slug(username, slug):
     user = current_user
     post = user.posts.filter_by(slug=slug).first()
@@ -141,6 +157,7 @@ def u_slug(username, slug):
 @app.route('/u/<username>/<slug>/delete')
 @fresh_login_required
 @same_user_required
+@to_lower('username')
 def u_slug_delete(username, slug):
     user = current_user
     post = user.posts.filter_by(slug=slug).first()
@@ -159,6 +176,7 @@ def u_slug_delete(username, slug):
 @app.route('/u/<username>/create')
 @fresh_login_required
 @same_user_required
+@to_lower('username')
 def u_create(username):
     user = current_user
     post = Post(created_timestamp=datetime.utcnow(), author=user)
@@ -195,7 +213,7 @@ def register():
     if form.validate_on_submit():        
         # Create new user
         user = User(
-            username=form.username.data,
+            username=form.username.data.lower(),
             password=bcrypt.generate_password_hash(form.password.data),
             companion_key=generate_salt(32),
             user_key_salt=generate_salt(32)
