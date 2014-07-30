@@ -48,7 +48,7 @@ def AES_decrypt(key, data):
     assert None not in (key, data), 'parameters can not be None'
     assert len(key) in AES.key_size, 'key size must be 16, 24, or 32 bytes'
     nonce, tag, ciphertext = data[:16], data[16:32], data[32:]
-    cipher = AES.new(key, AES.MODE_EAX, nonce)
+    cipher = AES.new(key, AES.MODE_EAX, nonce=nonce, mac_len=16)
     plaintext = cipher.decrypt_and_verify(ciphertext, tag)
     return plaintext[:-ord(plaintext[-1])]
 
