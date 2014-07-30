@@ -100,22 +100,22 @@ def index():
 
 
 @app.route('/u/<username>')
+@to_lower('username')
 @fresh_login_required
 @same_user_required
-@to_lower('username')
 def u(username):
     print username
     return username
 
 
-@app.route('/u/<username>/<slug>/update')
+@app.route('/u/<username>/<slug>/update', methods=['GET', 'POST'])
+@to_lower('username')
 @fresh_login_required
 @same_user_required
-@to_lower('username')
 def api_update_post(username, slug):
     user = current_user
-    meta = request.args.get('meta', type=str)
-    content = request.args.get('content', type=str)
+    meta = request.form.get('meta', type=str)
+    content = request.form.get('content', type=str)
 
     if None not in (meta, content):
         post = user.posts.filter_by(slug=slug).first()
@@ -135,9 +135,9 @@ def api_update_post(username, slug):
 
 
 @app.route('/u/<username>/<slug>')
+@to_lower('username')
 @fresh_login_required
 @same_user_required
-@to_lower('username')
 def u_slug(username, slug):
     user = current_user
     post = user.posts.filter_by(slug=slug).first()
@@ -155,9 +155,9 @@ def u_slug(username, slug):
 
 
 @app.route('/u/<username>/<slug>/delete')
+@to_lower('username')
 @fresh_login_required
 @same_user_required
-@to_lower('username')
 def u_slug_delete(username, slug):
     user = current_user
     post = user.posts.filter_by(slug=slug).first()
@@ -174,9 +174,9 @@ def u_slug_delete(username, slug):
 
 
 @app.route('/u/<username>/create')
+@to_lower('username')
 @fresh_login_required
 @same_user_required
-@to_lower('username')
 def u_create(username):
     user = current_user
     post = Post(created_timestamp=datetime.utcnow(), author=user)
