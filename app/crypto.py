@@ -34,19 +34,22 @@ def generate_key(password, salt, length=32):
 def AES_encrypt(key, data):
     """Encrypts data with key and random IV using AES."""
     assert None not in (key, data), 'parameters can not be None'
-    assert len(key) in (16, 24, 32), 'key size must be 16, 24, or 32 bytes'
-    iv = generate_salt(16)
+    assert len(key) in AES.key_size, 'key size must be 16, 24, or 32 bytes'
+    nonce = generate_salt(16)
     length = 16 - (len(data) % 16)
     data += chr(length) * length
-    encryptor = AES.new(key, AES.MODE_CBC, iv)
-    return iv + encryptor.encrypt(bytes(data))
+    cipher = AES.new(key, AES.MODE_EAX, nonce=nonce, mac_len=16)
+    ciphertext, tag = cipher.encrypt_and_digest(bytes(data))
+    return ''.join([nonce, tag, ciphertext])
 
 
 def AES_decrypt(key, data):
     """Decrypts iv + data with key using AES."""
     assert None not in (key, data), 'parameters can not be None'
-    assert len(key) in (16, 24, 32), 'key size must be 16, 24, or 32 bytes'
-    iv, data = data[:16], data[16:]
-    decryptor = AES.new(key, AES.MODE_CBC, iv)
-    plaintext = decryptor.decrypt(data)
+    assert len(key) in AES.key_size, 'key size must be 16, 24, or 32 bytes'
+    nonce, tag, ciphertext = data[:16], data[16:32], data[32:]
+    cipher = AES.new(key, AES.MODE_EAX, nonce)
+    plaintext = cipher.decrypt_and_verify(ciphertext, tag)
     return plaintext[:-ord(plaintext[-1])]
+
+
