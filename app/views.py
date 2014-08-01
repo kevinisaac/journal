@@ -11,9 +11,7 @@ from functools import wraps
 from datetime import datetime
 from urlparse import urlparse, urljoin
 import snappy
-import binascii
 import random
-import itertools
 
 
 def is_safe_url(target):

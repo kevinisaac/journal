@@ -2,6 +2,7 @@ import scrypt
 from Crypto import Random
 from Crypto.Cipher import AES
 from Crypto.Hash import SHA256
+from datetime import datetime
 
 
 def xor_keys(key1, key2):
@@ -32,20 +33,22 @@ def generate_key(password, salt, length=32):
 
 
 def AES_encrypt(key, data):
-    """Encrypts + signs data with key and random nonce using AES."""
+    """Encrypts + signs data with key and date and nonce using AES."""
     assert None not in (key, data), 'parameters can not be None'
     assert len(key) in AES.key_size, 'key size must be 16, 24, or 32 bytes'
-    nonce = generate_salt(16)
+    nonce = str(datetime.utcnow()) + generate_salt(16)
     cipher = AES.new(key, AES.MODE_EAX, nonce=nonce, mac_len=16)
     ciphertext, tag = cipher.encrypt_and_digest(bytes(data))
-    return ''.join([nonce, tag, ciphertext])
+    return ''.join([str(len(nonce)),'_', nonce, tag, ciphertext])
 
 
 def AES_decrypt(key, data):
     """Decrypts and verifies none + tag + data with key using AES."""
     assert None not in (key, data), 'parameters can not be None'
     assert len(key) in AES.key_size, 'key size must be 16, 24, or 32 bytes'
-    nonce, tag, ciphertext = data[:16], data[16:32], data[32:]
+    sp = data.find('_')
+    sz = int(data[0:sp])
+    nonce, tag, ciphertext = data[sp+1:sp+1+sz], data[sp+1+sz:sp+17+sz], data[sp+17+sz:]
     cipher = AES.new(key, AES.MODE_EAX, nonce=nonce, mac_len=16)
     return cipher.decrypt_and_verify(ciphertext, tag)
 
