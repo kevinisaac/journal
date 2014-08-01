@@ -32,11 +32,11 @@ def generate_key(password, salt, length=32):
     return scrypt.hash(str(password), str(salt), 1 << 14, 8, 1, length)
 
 
-def AES_encrypt(key, data):
+def AES_encrypt(key, username, data):
     """Encrypts + signs data with key and date and nonce using AES."""
     assert None not in (key, data), 'parameters can not be None'
     assert len(key) in AES.key_size, 'key size must be 16, 24, or 32 bytes'
-    nonce = str(datetime.utcnow()) + generate_salt(16)
+    nonce = ''.join([username, str(datetime.utcnow()), generate_salt(32)])
     cipher = AES.new(key, AES.MODE_EAX, nonce=nonce, mac_len=16)
     ciphertext, tag = cipher.encrypt_and_digest(bytes(data))
     return ''.join([str(len(nonce)),'_', nonce, tag, ciphertext])

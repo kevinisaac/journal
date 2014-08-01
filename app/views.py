@@ -121,7 +121,7 @@ def api_update_post(username, slug):
             half_key = session[generate_hash(user.user_key_salt)]
             key = xor_keys(half_key, app.config['MASTER_KEY'])
             content = snappy.compress(content)
-            content = AES_encrypt(key, content)
+            content = AES_encrypt(key, user.username, content)
 
             post.meta = meta
             post.content = content
