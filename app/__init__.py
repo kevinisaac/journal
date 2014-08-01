@@ -6,8 +6,8 @@ from flask.ext.login import LoginManager
 from flask.ext.bcrypt import Bcrypt
 from flask.ext.script import Manager
 from flask.ext.migrate import Migrate, MigrateCommand
-#from flask.ext.markdown import Markdown
 from flask_sslify import SSLify
+from flask_bootstrap import Bootstrap
 
 app = Flask(__name__)
 app.debug = True
@@ -38,7 +38,7 @@ KVSessionExtension(store, app)
 # SSL
 sslify = SSLify(app)
 
-# Markdown
-#Markdown(app)
+# Bootstrap
+Bootstrap(app)
 
 from app import views, models

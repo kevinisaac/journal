@@ -89,8 +89,12 @@ def load_user(id):
     return User.query.get(int(id))
 
 
+
 @app.route('/')
 def index():
+    return render_template("index.html")
+
+
     if current_user and current_user.is_authenticated():
         return redirect(url_for('.u', username=current_user.username))
     else:

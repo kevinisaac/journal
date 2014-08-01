@@ -36,7 +36,7 @@ def AES_encrypt(key, username, data):
     """Encrypts + signs data with key and date and nonce using AES."""
     assert None not in (key, data), 'parameters can not be None'
     assert len(key) in AES.key_size, 'key size must be 16, 24, or 32 bytes'
-    nonce = ''.join([username, str(datetime.utcnow()), generate_salt(32)])
+    nonce = ''.join([str(username), str(datetime.utcnow()), generate_salt(32)])
     cipher = AES.new(key, AES.MODE_EAX, nonce=nonce, mac_len=16)
     ciphertext, tag = cipher.encrypt_and_digest(bytes(data))
     return ''.join([str(len(nonce)),'_', nonce, tag, ciphertext])
