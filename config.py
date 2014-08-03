@@ -11,3 +11,6 @@ MASTER_KEY = 'rCXc1nLJ8hUqQqdK1aeYUfu6gKCpQubR'
 PUBLIC_KEY = 'Aog0APUrgXlwgfk4gPX6WAodtX3uzq0N'
 SESSION_PROTECTION = 'strong'
 
+MAX_SEARCH_RESULTS = 50
+WHOOSH_BASE = os.path.join(basedir, 'search.db')
+

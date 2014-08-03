@@ -5,11 +5,11 @@ $(function() {
     // Set up keybinds
     Mousetrap.bind(['mod+s'], function(e) {
         $.post(window.location.pathname + '/update', {
-            content: $('textarea#main-editor').val()
+            content: $('textarea#main-editor').val(),
+            cursor: $('textarea#main-editor').textrange('get', 'position')
         },
         function(data) {
         });
-        console.log('command shift k'); 
 
         // Disable default browser behavior
         return false;

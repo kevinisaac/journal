@@ -119,12 +119,15 @@ def u(username):
 def update_post(username, slug):
     user = current_user
     content = request.form.get('content', type=str)
+    cursor = request.form.get('cursor', type=int)
 
     if content is not None:
         post = user.posts.filter_by(slug=slug).first()
         if post:
             r = regex.compile(r'<\s*meta\s*>((?:(?>[^<]+)|<(?!\s*meta\s*>))*?)<\s*/meta\s*>', regex.I | regex.S)
             post.meta = json.dumps(regex.findall(r, content))
+
+            post.cursor = len(content) if not cursor else cursor
 
             post.modified_timestamp = datetime.utcnow()
 
@@ -156,7 +159,7 @@ def u_slug(username, slug):
             key = xor_keys(half_key, app.config['MASTER_KEY'])
             content = AES_decrypt(key, post.content)
             content = snappy.decompress(content)
-            return render_template("post.html", content=content)
+            return render_template("post.html", content=content, cursor=post.cursor)
         return render_template("post.html", content='')
     abort(404)
 
