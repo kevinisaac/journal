@@ -92,13 +92,13 @@ def load_user(id):
 
 @app.route('/')
 def index():
-    return render_template("index.html")
-
-
-    if current_user and current_user.is_authenticated():
-        return redirect(url_for('.u', username=current_user.username))
-    else:
-        return "hi"
+    user = current_user
+    if user and user.is_authenticated():
+        post = user.posts.order_by(Post.modified_timestamp.desc()).first()
+        if post:
+            return redirect(url_for('.u_slug', username=user.username, slug=post.slug))
+        return redirect(url_for('.u_create', username=user.username))
+    return "hi"
 
 
 @app.route('/u/<username>')
@@ -106,8 +106,7 @@ def index():
 @fresh_login_required
 @same_user_required
 def u(username):
-    print username
-    return username
+    return "hi"
 
 
 @app.route('/u/<username>/<slug>/update', methods=['GET', 'POST'])
@@ -149,10 +148,8 @@ def u_slug(username, slug):
             key = xor_keys(half_key, app.config['MASTER_KEY'])
             content = AES_decrypt(key, post.content)
             content = snappy.decompress(content)
-            return content
-        
-        return "Empty"
-        #return render_template("post.html")
+            return render_template("post.html", content=content)
+        return render_template("post.html", content='')
     abort(404)
 
 
