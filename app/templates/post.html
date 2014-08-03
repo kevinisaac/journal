@@ -4,17 +4,18 @@
 
 {% block head %}
 {{super()}}
-<link rel="stylesheet" type="text/css" href="css/post.css">
+<link rel="stylesheet" type="text/css" href="/css/post.css">
 {% endblock %}
 
 {% block main %}
-<textarea id="main-editor" class="editor max-height"></textarea>
+<textarea id="main-editor" class="editor mousetrap max-height">{{ content }}</textarea>
 {% endblock %} 
 
 {% block body %}
 {{super()}}
-<script src="bower_components/jquery-autosize/jquery.autosize.min.js"></script>
-<script src="bower_components/jquery-textrange/jquery-textrange.min.js"></script>
-<script src="js/post.js"></script>
+<script src="/bower_components/mousetrap/mousetrap.min.js"></script>
+<script src="/bower_components/jquery-autosize/jquery.autosize.min.js"></script>
+<script src="/bower_components/jquery-textrange/jquery-textrange.min.js"></script>
+<script src="/js/post.js"></script>
 {% endblock %}
 

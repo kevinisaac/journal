@@ -35,6 +35,7 @@ class Post(db.Model):
 
     meta = db.Column(db.Text)
     content = db.Column(db.LargeBinary)
+    cursor = db.Column(db.Integer)
     created_timestamp = db.Column(db.DateTime)
     modified_timestamp = db.Column(db.DateTime)
 

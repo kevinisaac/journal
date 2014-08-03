@@ -12,6 +12,8 @@ from datetime import datetime
 from urlparse import urlparse, urljoin
 import snappy
 import random
+import regex
+import json
 
 
 def is_safe_url(target):
@@ -96,6 +98,7 @@ def index():
     if user and user.is_authenticated():
         post = user.posts.order_by(Post.modified_timestamp.desc()).first()
         if post:
+            print post.modified_timestamp
             return redirect(url_for('.u_slug', username=user.username, slug=post.slug))
         return redirect(url_for('.u_create', username=user.username))
     return "hi"
@@ -113,26 +116,31 @@ def u(username):
 @to_lower('username')
 @fresh_login_required
 @same_user_required
-def api_update_post(username, slug):
+def update_post(username, slug):
     user = current_user
-    meta = request.form.get('meta', type=str)
     content = request.form.get('content', type=str)
 
-    if None not in (meta, content):
+    if content is not None:
         post = user.posts.filter_by(slug=slug).first()
         if post:
+            r = regex.compile(r'<\s*meta\s*>((?:(?>[^<]+)|<(?!\s*meta\s*>))*?)<\s*/meta\s*>', regex.I | regex.S)
+            post.meta = json.dumps(regex.findall(r, content))
+
+            post.modified_timestamp = datetime.utcnow()
+
             half_key = session[generate_hash(user.user_key_salt)]
             key = xor_keys(half_key, app.config['MASTER_KEY'])
             content = snappy.compress(content)
             content = AES_encrypt(key, user.username, content)
-
-            post.meta = meta
             post.content = content
+
             db.session.add(post)
             db.session.commit()
             return jsonify(error=None)
         return jsonify(error="Not found")
     return jsonify(error="Invalid parameters")
+
+r'<\s*meta\b\s*>((?:(?>[^<]+)|<(?!meta\b\s*>))*?)<\s*/meta\s*>'
 
 
 @app.route('/u/<username>/<slug>')
@@ -162,10 +170,11 @@ def u_slug_delete(username, slug):
     post = user.posts.filter_by(slug=slug).first()
     if post:
         if post.content:
-            # Overwrite data
             post.content = generate_salt(len(post.content))
-            db.session.add(post)
-            db.session.commit()
+        if post.meta:
+            post.meta = generate_salt(len(post.meta))
+        db.session.add(post)
+        db.session.commit()
         db.session.delete(post)
         db.session.commit()
         return redirect(url_for('.index'))
