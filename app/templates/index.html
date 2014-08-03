@@ -1,1 +1,20 @@
 {% extends "base.html" %}
+
+{% block title %}This is an example page{% endblock %}
+
+{% block head %}
+{{super()}}
+<link rel="stylesheet" type="text/css" href="css/index.css">
+{% endblock %}
+
+{% block main %}
+<textarea id="main-editor" class="editor max-height"></textarea>
+{% endblock %} 
+
+{% block body %}
+{{super()}}
+<script src="bower_components/jquery-autosize/jquery.autosize.min.js"></script>
+<script src="bower_components/jquery-textrange/jquery-textrange.min.js"></script>
+<script src="js/index.js"></script>
+{% endblock %}
+

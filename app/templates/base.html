@@ -5,10 +5,11 @@
 {% block head %}
 {{super()}}
 {{fixes.ie8()}}
+<link rel="stylesheet" type="text/css" href="css/base.css">
 {% endblock %}
 
 {% block content %}
-<div class="container">
+<div class="container max-height">
     <div class="row">
         <div class="col-md-2"></div>
         <div class="col-md-8">{% block superheader %}{% endblock %}</div>
@@ -19,15 +20,10 @@
         <div class="col-md-8">{% block header %}{% endblock %}</div>
         <div class="col-md-2"></div>
     </div>
-    <div class="row">
-        <div class="col-md-2"></div>
-        <div class="col-md-8">{% block content2 %}{% endblock %}</div>
-        <div class="col-md-2"></div>
-    </div>
-    <div class="row">
-        <div class="col-md-2"></div>
-        <div class="col-md-8">{% block footer %}{% endblock %}</div>
-        <div class="col-md-2"></div>
+    <div class="row max-height">
+        <div class="col-md-2 max-height"></div>
+        <div class="col-md-8 max-height">{% block main %}{% endblock %}</div>
+        <div class="col-md-2 max-height"></div>
     </div>
 </div>
 {% endblock %}

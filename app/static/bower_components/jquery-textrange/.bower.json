@@ -1,0 +1,22 @@
+{
+  "name": "jquery-textrange",
+  "version": "1.3.0",
+  "main": "jquery-textrange.js",
+  "dependencies": {
+    "jquery": ">=1.3"
+  },
+  "ignore": [
+    "textrange.jquery.json"
+  ],
+  "homepage": "https://github.com/dwieeb/jquery-textrange",
+  "_release": "1.3.0",
+  "_resolution": {
+    "type": "version",
+    "tag": "1.3.0",
+    "commit": "aeb38b6fef64f1b051216548a22286e426557b2a"
+  },
+  "_source": "git://github.com/dwieeb/jquery-textrange.git",
+  "_target": "~1.3.0",
+  "_originalSource": "jquery-textrange",
+  "_direct": true
+}

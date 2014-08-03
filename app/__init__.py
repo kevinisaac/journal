@@ -8,11 +8,17 @@ from flask.ext.script import Manager
 from flask.ext.migrate import Migrate, MigrateCommand
 from flask_sslify import SSLify
 from flask_bootstrap import Bootstrap
+from werkzeug import SharedDataMiddleware
+import os
 
 app = Flask(__name__)
 app.debug = True
 
 app.config.from_object('config')
+
+app.wsgi_app = SharedDataMiddleware(app.wsgi_app, {
+            '/': os.path.join(os.path.dirname(__file__), 'static')
+        })
 
 # DB
 db = SQLAlchemy(app)
