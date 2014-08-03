@@ -143,8 +143,6 @@ def update_post(username, slug):
         return jsonify(error="Not found")
     return jsonify(error="Invalid parameters")
 
-r'<\s*meta\b\s*>((?:(?>[^<]+)|<(?!meta\b\s*>))*?)<\s*/meta\s*>'
-
 
 @app.route('/u/<username>/<slug>')
 @to_lower('username')
