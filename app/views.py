@@ -124,19 +124,21 @@ def update_post(username, slug):
     if content is not None:
         post = user.posts.filter_by(slug=slug).first()
         if post:
-            r = regex.compile(r'<\s*meta\s*>((?:(?>[^<]+)|<(?!\s*meta\s*>))*?)<\s*/meta\s*>', regex.I | regex.S)
-            post.meta = json.dumps(regex.findall(r, content))
-
             post.cursor = len(content) if not cursor else cursor
-
             post.modified_timestamp = datetime.utcnow()
-
+            
+            # Get meta
+            r = regex.compile(r'<<((?:(?>[^<>]+)|<(?!<)|>(?!>))*?)>>', regex.I | regex.S)
+            post.meta = json.dumps(regex.findall(r, content))
+            print post.meta
+            
+            # Encrypt
             half_key = session[generate_hash(user.user_key_salt)]
             key = xor_keys(half_key, app.config['MASTER_KEY'])
             content = snappy.compress(content)
             content = AES_encrypt(key, user.username, content)
             post.content = content
-
+            
             db.session.add(post)
             db.session.commit()
             return jsonify(error=None)
@@ -153,6 +155,7 @@ def u_slug(username, slug):
     post = user.posts.filter_by(slug=slug).first()
     if post:
         if post.content:
+            # Decrypt
             half_key = session[generate_hash(user.user_key_salt)]
             key = xor_keys(half_key, app.config['MASTER_KEY'])
             content = AES_decrypt(key, post.content)
@@ -170,12 +173,15 @@ def u_slug_delete(username, slug):
     user = current_user
     post = user.posts.filter_by(slug=slug).first()
     if post:
+        # Wipe
         if post.content:
             post.content = generate_salt(len(post.content))
         if post.meta:
-            post.meta = generate_salt(len(post.meta))
+            post.meta = '\x00'*len(post.meta)
         db.session.add(post)
         db.session.commit()
+        
+        # Delete
         db.session.delete(post)
         db.session.commit()
         return redirect(url_for('.index'))
