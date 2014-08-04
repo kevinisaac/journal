@@ -98,7 +98,6 @@ def index():
     if user and user.is_authenticated():
         post = user.posts.order_by(Post.modified_timestamp.desc()).first()
         if post:
-            print post.modified_timestamp
             return redirect(url_for('.u_slug', username=user.username, slug=post.slug))
         return redirect(url_for('.u_create', username=user.username))
     return "hi"
@@ -160,7 +159,7 @@ def u_slug(username, slug):
             content = AES_decrypt(key, post.content)
             content = snappy.decompress(content)
             return render_template("post.html", content=content, user=user, post=post)
-        return render_template("post.html", content='')
+        return render_template("post.html", content='', user=user, post=post)
     abort(404)
 
 
@@ -212,7 +211,7 @@ def u_create(username):
         db.session.delete(post)
         db.session.commit()
         abort(500) # Probability ~0
-        
+    
     post.slug = slug
     db.session.add(post)
     db.session.commit()

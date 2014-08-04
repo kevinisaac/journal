@@ -30,7 +30,7 @@ class User(db.Model):
         return '<User %r>' % (self.username)
 
 class Post(db.Model):
-    __searchable__ = ['meta', 'created_timestamp', 'modified_timestamp']
+    __searchable__ = ['meta']
 
     id = db.Column(db.Integer, primary_key=True)
     slug = db.Column(db.String(128))
@@ -38,7 +38,7 @@ class Post(db.Model):
 
     meta = db.Column(db.Text)
     content = db.Column(db.LargeBinary)
-    cursor = db.Column(db.Integer)
+    cursor = db.Column(db.Integer, default=0)
     created_timestamp = db.Column(db.DateTime)
     modified_timestamp = db.Column(db.DateTime)
 

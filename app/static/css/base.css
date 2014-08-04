@@ -70,3 +70,41 @@ textarea{
     margin: 0;
     padding: 0;
 }
+
+
+.fadein {
+    -webkit-animation: fadein .25s; /* Safari and Chrome */
+       -moz-animation: fadein .25s; /* Firefox */
+        -ms-animation: fadein .25s; /* Internet Explorer */
+         -o-animation: fadein .25s; /* Opera */
+            animation: fadein .25s;
+}
+
+@keyframes fadein {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+/* Firefox */
+@-moz-keyframes fadein {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+/* Safari and Chrome */
+@-webkit-keyframes fadein {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+/* Internet Explorer */
+@-ms-keyframes fadein {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}​
+
+/* Opera */
+@-o-keyframes fadein {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}​
