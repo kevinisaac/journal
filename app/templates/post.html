@@ -8,8 +8,14 @@
 {% endblock %}
 
 {% block main %}
-<textarea id="main-editor" class="editor mousetrap max-height">{{ content }}</textarea>
-{% endblock %} 
+<textarea id="main-editor" class="editor mousetrap max-height">
+{{ content }}
+</textarea>
+{% endblock %}
+
+{% block footer %}
+HELLO, THERE
+{% endblock %}
 
 {% block body %}
 {{super()}}

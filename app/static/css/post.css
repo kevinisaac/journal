@@ -2,7 +2,7 @@
     resize: none; 
     border-style: none;
     border-color: Transparent;
-    overflow: auto;
+    overflow-y: hidden;
     outline: none; 
     -webkit-box-shadow: none;
     -moz-box-shadow: none;
