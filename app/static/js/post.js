@@ -1,13 +1,30 @@
 $(function() {
     
+    var cached_text = "";
     function update() {
-        $.post(window.location.pathname + '/update', {
-            content: $('textarea#main-editor').val(),
-            cursor: $('textarea#main-editor').textrange('get', 'position')
-        },
-        function(data) {
-        });  
+        if (cached_text !=  $('textarea#main-editor').val()) {
+            cached_text = $('textarea#main-editor').val()
+            $.post(window.location.pathname + '/update', {
+                content: cached_text,
+                cursor: $('textarea#main-editor').textrange('get', 'position')
+            },
+            function(data) {
+            });
+        }
+        else {
+            $.post(window.location.pathname + '/update', {
+                cursor: $('textarea#main-editor').textrange('get', 'position')
+            },
+            function(data) {
+            });
+        }
     }
+
+    // Convert timestamps
+    $('.timestamp').each(function(index) {
+        $(this).text(moment($(this).text()).format('M/D').toLocaleString());
+    });
+
     // Set up main editor
     $('textarea#main-editor').autosize().focus();
 

@@ -141,6 +141,14 @@ def update_post(username, slug):
             db.session.commit()
             return jsonify(error=None)
         return jsonify(error="Not found")
+    elif cursor is not None:
+        post = user.posts.filter_by(slug=slug).first()
+        if post:
+            post.cursor = cursor
+            db.session.add(post)
+            db.session.commit()
+            return jsonify(error=None)
+        return jsonify(error="Not found")
     return jsonify(error="Invalid parameters")
 
 

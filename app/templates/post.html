@@ -17,7 +17,7 @@
             <li><a href="#">07/21</a></li>
             <li><a href="#">07/31</a></li>
             <li><a href="#">08/01</a></li>
-            <li><a href="#">10/01</a></li>
+            <li><a href="#"><span class="timestamp">{{ post.created_timestamp }}</span></a></li>
             <li><a href="#">&raquo;</a></li>
             <li><a href="create">+</a></li>
         </ul>
@@ -45,10 +45,12 @@
 <script src="/bower_components/mousetrap/mousetrap.min.js"></script>
 <script src="/bower_components/jquery-autosize/jquery.autosize.min.js"></script>
 <script src="/bower_components/jquery-textrange/jquery-textrange.min.js"></script>
+<script src="/bower_components/moment/min/moment-with-locales.min.js"></script>
 <script src="/js/post.js"></script>
 <script>
 $(function() {
     $('textarea#main-editor').textrange('setcursor', {{ post.cursor }});
+
     $('a#delete-button').on('click', function() {
         $('div#alert-area').append(
             '<div class="alert alert-warning alert-dismissible fadein" role="alert"> \
@@ -62,6 +64,5 @@ $(function() {
     });
 });
 </script>
-
 {% endblock %}
 

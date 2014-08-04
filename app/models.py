@@ -33,13 +33,13 @@ class Post(db.Model):
     __searchable__ = ['meta']
 
     id = db.Column(db.Integer, primary_key=True)
-    slug = db.Column(db.String(128))
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    slug = db.Column(db.String(128), index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
 
     meta = db.Column(db.Text)
     content = db.Column(db.LargeBinary)
     cursor = db.Column(db.Integer, default=0)
-    created_timestamp = db.Column(db.DateTime)
+    created_timestamp = db.Column(db.DateTime, index=True)
     modified_timestamp = db.Column(db.DateTime)
 
     def __repr__(self):
