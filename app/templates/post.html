@@ -7,14 +7,42 @@
 <link rel="stylesheet" type="text/css" href="/css/post.css">
 {% endblock %}
 
-{% block main %}
-<textarea id="main-editor" class="editor mousetrap max-height">
-{{ content }}
-</textarea>
+{% block header %}
+<div class="row">
+    <div class="col-md-2 hidden-sm hidden-xs"></div>
+    <div class="col-md-5">
+        <ul class="pagination">
+            <li><a href="#">x</a></li>
+            <li><a href="#">&laquo;</a></li>
+            <li><a href="#">07/21</a></li>
+            <li><a href="#">07/31</a></li>
+            <li><a href="#">08/01</a></li>
+            <li><a href="#">10/01</a></li>
+            <li><a href="#">&raquo;</a></li>
+            <li><a href="#">+</a></li>
+        </ul>
+    </div>
+    <div class="col-md-3">
+        <div class="input-group" style="margin: 20px 0 20px 0;">
+            <span class="input-group-btn">
+                <button class="btn btn-default" type="button">Search</button>
+            </span>
+            <input type="text" class="form-control mousetrap">
+        </div>
+    </div>
+    <div class="col-md-2 hidden-sm hidden-xs"></div>
+</div>
 {% endblock %}
 
-{% block footer %}
-HELLO, THERE
+{% block main %}
+ <div class="alert alert-warning alert-dismissible" role="alert">
+    <button type="button" class="close" data-dismiss="alert">
+        <span aria-hidden="true">&times;</span>
+        <span class="sr-only">Close</span></button>
+        Warning! This action is irreversable. To confirm delete, <a href="{{ post.slug }}/delete" class="alert-link">click here</a>.
+    </div>
+<textarea id="main-editor" class="editor mousetrap max-height">
+{{ content }}</textarea>
 {% endblock %}
 
 {% block body %}
@@ -23,6 +51,6 @@ HELLO, THERE
 <script src="/bower_components/jquery-autosize/jquery.autosize.min.js"></script>
 <script src="/bower_components/jquery-textrange/jquery-textrange.min.js"></script>
 <script src="/js/post.js"></script>
-<script>$('textarea#main-editor').textrange('setcursor', {{ cursor }});</script>
+<script>$('textarea#main-editor').textrange('setcursor', {{ post.cursor }});</script>
 {% endblock %}
 

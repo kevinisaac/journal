@@ -30,7 +30,7 @@ class User(db.Model):
         return '<User %r>' % (self.username)
 
 class Post(db.Model):
-    __searchable__ = ['meta']
+    __searchable__ = ['meta', 'created_timestamp', 'modified_timestamp']
 
     id = db.Column(db.Integer, primary_key=True)
     slug = db.Column(db.String(128))

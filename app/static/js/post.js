@@ -1,5 +1,3 @@
-
-
 $(function() {
     
     function update() {
@@ -39,4 +37,10 @@ $(function() {
         timer = setTimeout(update, 500);
         time = new Date();
     });
+
+    /*$(document).on('click', function(event) {
+        if (!$(event.target).closest('textarea#main-editor').length) {
+            alert('outside!');  
+        }
+    });*/
 });

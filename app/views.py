@@ -130,7 +130,6 @@ def update_post(username, slug):
             # Get meta
             r = regex.compile(r'<<((?:(?>[^<>]+)|<(?!<)|>(?!>))*?)>>', regex.I | regex.S)
             post.meta = json.dumps(regex.findall(r, content))
-            print post.meta
             
             # Encrypt
             half_key = session[generate_hash(user.user_key_salt)]
@@ -160,7 +159,7 @@ def u_slug(username, slug):
             key = xor_keys(half_key, app.config['MASTER_KEY'])
             content = AES_decrypt(key, post.content)
             content = snappy.decompress(content)
-            return render_template("post.html", content=content, cursor=post.cursor)
+            return render_template("post.html", content=content, user=user, post=post)
         return render_template("post.html", content='')
     abort(404)
 
