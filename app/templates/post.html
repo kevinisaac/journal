@@ -14,10 +14,14 @@
         <ul class="pagination">
             <li><a id="delete-button" href="#">x</a></li>
             <li><a href="#">&laquo;</a></li>
-            <li><a href="#">07/21</a></li>
-            <li><a href="#">07/31</a></li>
-            <li><a href="#">08/01</a></li>
-            <li><a href="#"><span class="timestamp">{{ post.created_timestamp }}</span></a></li>
+
+            {% for p in prev | reverse %}
+            <li><a href="#"><span class="timestamp">{{ p.created_timestamp }}</span></a></li>
+            {% endfor %}
+            <li class="active"><a href="#"><span class="timestamp">{{ post.created_timestamp }}</span></a></li>
+            {% for n in next | reverse %}
+            <li><a href="#"><span class="timestamp">{{ n.created_timestamp }}</span></a></li>
+            {% endfor %}
             <li><a href="#">&raquo;</a></li>
             <li><a href="create">+</a></li>
         </ul>
@@ -36,8 +40,14 @@
 
 {% block main %}
 <div id="alert-area"></div>
-<textarea id="main-editor" class="editor mousetrap max-height">
+<textarea id="main-editor" class="editor mousetrap">
 {{ content }}</textarea>
+<div id="footer">
+    Toots
+</div>
+{% endblock %}
+
+{% block footer %}
 {% endblock %}
 
 {% block body %}

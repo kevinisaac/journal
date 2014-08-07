@@ -14,6 +14,7 @@ import snappy
 import random
 import regex
 import json
+from sqlalchemy import desc, func
 
 
 def is_safe_url(target):
@@ -160,14 +161,27 @@ def u_slug(username, slug):
     user = current_user
     post = user.posts.filter_by(slug=slug).first()
     if post:
+        _prev = user.posts.filter(Post.created_timestamp < post.created_timestamp).slice(0, 4)
+        _next = Post.query.filter(User.username==user.username,Post.created_timestamp > post.created_timestamp).order_by(Post.created_timestamp).slice(0, 4)
+        _prev_count = _prev.count()
+        _next_count = _next.count()
+
+        if _prev_count < 2:
+            _next = _next.slice(0, 4 - _prev_count)
+        elif _next_count < 2:
+            _prev = _prev.slice(0, 4 - _next_count)
+        else:
+            _prev = _prev.slice(0, 2)
+            _next = _next.slice(0, 2)
+
         if post.content:
             # Decrypt
             half_key = session[generate_hash(user.user_key_salt)]
             key = xor_keys(half_key, app.config['MASTER_KEY'])
             content = AES_decrypt(key, post.content)
             content = snappy.decompress(content)
-            return render_template("post.html", content=content, user=user, post=post)
-        return render_template("post.html", content='', user=user, post=post)
+            return render_template("post.html", content=content, user=user, post=post, next=_next, prev=_prev)
+        return render_template("post.html", content='', user=user, post=post, next=_next, prev=_prev)
     abort(404)
 
 
@@ -179,6 +193,8 @@ def u_slug_delete(username, slug):
     user = current_user
     post = user.posts.filter_by(slug=slug).first()
     if post:
+        _prev = user.posts.filter(Post.created_timestamp < post.created_timestamp).first()
+
         # Wipe
         if post.content:
             post.content = generate_salt(len(post.content))
@@ -190,7 +206,43 @@ def u_slug_delete(username, slug):
         # Delete
         db.session.delete(post)
         db.session.commit()
+
+        if _prev:
+            return redirect(url_for('.u_slug', username=username, slug=_prev.slug))
         return redirect(url_for('.index'))
+    abort(404)
+
+
+@app.route('/u/<username>/<slug>/next')
+@to_lower('username')
+@fresh_login_required
+@same_user_required
+def u_slug_next(username, slug):
+    user = current_user
+    post = user.posts.filter_by(slug=slug).first()
+    if post:
+        _next = Post.query.filter(User.username==user.username,Post.created_timestamp > post.created_timestamp).order_by(Post.created_timestamp).first()
+        #_next = user.posts.filter(Post.created_timestamp > post.created_timestamp).order_by('created_timestamp desc').first()
+        if _next:
+            print "here!"
+            return redirect(url_for('.u_slug', username=username, slug=_next.slug))
+        print "exit!"
+        return redirect(url_for('.u_slug', username=username, slug=post.slug))
+    abort(404)
+
+
+@app.route('/u/<username>/<slug>/prev')
+@to_lower('username')
+@fresh_login_required
+@same_user_required
+def u_slug_prev(username, slug):
+    user = current_user
+    post = user.posts.filter_by(slug=slug).first()
+    if post:
+        _prev = user.posts.filter(Post.created_timestamp < post.created_timestamp).first()
+        if _prev:
+            return redirect(url_for('.u_slug', username=username, slug=_prev.slug))
+        return redirect(url_for('.u_slug', username=username, slug=post.slug))
     abort(404)
 
 

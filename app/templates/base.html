@@ -11,21 +11,13 @@
 
 {% block content %}
 <div class="container max-height">
-    <div class="row">
-        <div class="col-md-2 hidden-sm hidden-xs"></div>
-        <div class="col-md-8 col-sm-12">{% block superheader %}{% endblock %}</div>
-        <div class="col-md-2 hidden-sm hidden-xs"></div>
-    </div>
+    {% block superheader %}{% endblock %}
     {% block header %}{% endblock %}
     <div class="row max-height">
         <div class="col-md-2 hidden-sm hidden-xs"></div>
         <div class="col-md-8 col-sm-12 max-height">{% block main %}{% endblock %}</div>
         <div class="col-md-2 hidden-sm hidden-xs"></div>
     </div>
-    <div class="row">
-        <div class="col-md-2 hidden-sm hidden-xs"></div>
-        <div class="col-md-8 col-sm-12">{% block footer %}{% endblock %}</div>
-        <div class="col-md-2 hidden-sm hidden-xs"></div>
-    </div>
+    {% block footer %}{% endblock %}
 </div>
 {% endblock %}

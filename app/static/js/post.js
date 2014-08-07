@@ -34,6 +34,16 @@ $(function() {
         return false;
     });
 
+    Mousetrap.bind(['mod+right'], function(e) {
+        window.location = window.location.pathname + '/next';
+        return false;
+    });
+
+    Mousetrap.bind(['mod+left'], function(e) {
+        window.location = window.location.pathname + '/prev';
+        return false;
+    });
+
     Mousetrap.bind(['tab'], function(e) {
         var start = $('textarea#main-editor').textrange('get', 'position');
         var end = $('textarea#main-editor').textrange('get', 'end');

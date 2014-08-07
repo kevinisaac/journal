@@ -7,7 +7,7 @@ class User(db.Model):
     username = db.Column(db.String(16), index=True, unique=True)
     password = db.Column(db.String(60))
     status = db.Column(db.Integer, default=0)
-    posts = db.relationship('Post', backref = 'author', lazy = 'dynamic', order_by='Post.created_timestamp')
+    posts = db.relationship('Post', backref = 'author', lazy = 'dynamic', order_by='desc(Post.created_timestamp)')
 
     active = db.Column(db.Boolean, default=True)
     authenticated = db.Column(db.Boolean, default=False)
